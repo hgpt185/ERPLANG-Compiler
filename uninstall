@@ -1,0 +1,36 @@
+BOLD='\033[1m'
+GREEN='\033[1;32m'
+RED='\033[1;31m'
+MAGENTA='\033[1;35m'
+RESET='\033[0m'
+
+input () {
+	while :
+	do
+		read ans
+		if test "$ans" = "y" -o "$ans" = "Y"
+		then
+			return
+		elif  [ "$ans" = "n" -o "$ans" = "N" ]
+		then
+			exit 0
+		else
+			printf "\n${BOLD}${MAGENTA}Please re-enter correct option ${RESET}(y/n) : "
+		fi
+	done
+}
+
+if [ -f /usr/local/bin/erplag ]
+then
+	printf "${BOLD}${RED}Are you sure you want to uninstall ERPLAG compiler? ${RESET}(y/n) : "
+	input
+
+	sudo printf "Uninstalling ERPLAG compiler... \n\n${BOLD}${RED}"
+	echo "/usr/local/bin/erplag" | xargs -0 -n1 echo rm | sudo sh -x
+	echo "/usr/local/bin/erpclr" | xargs -0 -n1 echo rm | sudo sh -x
+	echo "/usr/local/bin/.compiler" | xargs -0 -n1 echo rm | sudo sh -x
+	printf "\n${BOLD}${GREEN}ERPLAG compiler has been successfully uninstalled!${RESET}\n"
+else
+	printf "${BOLD}${MAGENTA}ERPLAG compiler installation does not exist!${RESET}\n"
+	exit 1
+fi

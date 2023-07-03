@@ -1,0 +1,185 @@
+#! /bin/bash
+
+BOLD='\033[1m'
+GREEN='\033[1;32m'
+YELLOW='\033[1;33m'
+CYAN='\033[1;36m'
+RED='\033[1;31m'
+RESET='\033[0m'
+
+spin() {
+  while :
+  do
+    sleep 5
+    printf ".\n"
+  done
+}
+
+installErplag () {
+	make
+	if [ $? -ne 0 ]
+	then
+		printf "\n${BOLD}${RED}ERPLAG compiler installation failed! Please check the source code for errors\n${RESET}"
+		exit 1
+	fi
+
+    sudo cp .compiler /usr/local/bin
+	sudo cp erplag /usr/local/bin
+	sudo cp erpclr /usr/local/bin
+
+	make clean	
+}
+
+success () {
+	printf "\n${BOLD}${GREEN}ERPLAG compiler has been successfully installed!${RESET}\n"
+	printf "${BOLD}${YELLOW}Use ${CYAN}erplag -h ${YELLOW}to read the guidelines for using the compiler\n${RESET}"
+	printf "\nPress enter to continue..."
+	read
+	
+	exit 0
+}
+
+###################################################################################################################################
+
+if [ -f /usr/local/bin/erplag ]
+then
+	printf "${BOLD}${GREEN}ERPLAG compiler is already installed in this system${RESET}\n\n" 
+	printf "Please use ${BOLD}${CYAN}./rebuild ${RESET}to quickly remake the compiler\n"
+	printf "Otherwise, use ${BOLD}${CYAN}./uninstall ${RESET} to uninstall the compiler\n"
+	exit 1
+fi
+
+sudo printf "Installing ERPLAG compiler... \n\n"
+missing=""
+
+which gcc &> /dev/null
+if [ $? -ne 0 ]
+then
+	printf "${BOLD}${RED}Dependency : ${CYAN}gcc ${RED}is not installed in this system!\n${RESET}"
+	missing="gcc"
+fi
+which make &> /dev/null
+if [ $? -ne 0 ]
+then
+	printf "${BOLD}${RED}Dependency : ${CYAN}make ${RED}is not installed in this system!\n${RESET}"
+	missing="${missing} make"
+fi
+which nasm &> /dev/null
+if [ $? -ne 0 ]
+then
+	printf "${BOLD}${RED}Dependency : ${CYAN}nasm ${RED}is not installed in this system!\n${RESET}"
+	missing="${missing} nasm"
+fi
+
+if [[ "$missing" == "" ]]
+then
+	installErplag
+	success
+else
+	printf "${BOLD}${CYAN}\nAttempting to install missing packages...${RESET}\n"
+	
+	if [[ "$OSTYPE" == "linux"* ]]
+	then
+		#################### zypper (openSUSE) #####################
+		which zypper &> /dev/null
+		if [ $? -eq 0 ]
+		then
+			sudo zypper install -y $missing
+						
+			installErplag
+			success
+		fi
+	
+		#################### apt (debian) #####################
+		which apt-get &> /dev/null
+		if [ $? -eq 0 ]
+		then
+			sudo apt-get install -y $missing
+			
+			installErplag
+			success
+		fi
+		
+		#################### yum (Red Hat/Fedora) #####################
+		which yum &> /dev/null
+		if [ $? -eq 0 ]
+		then
+			which gcc &> /dev/null
+			if [ $? -ne 0 ]
+			then
+				sudo yum -y install gcc
+			fi
+
+			which make &> /dev/null
+			if [ $? -ne 0 ]
+			then
+				sudo yum -y install make
+			fi
+			    
+			which nasm &> /dev/null
+			if [ $? -ne 0 ]
+			then
+				which wget &> /dev/null
+				if [ $? -neq 0 ]
+				then
+					sudo yum -y install wget
+				fi
+                
+				wget https://www.nasm.us/pub/nasm/releasebuilds/2.14.02/linux/nasm-2.14.02-0.fc27.x86_64.rpm
+				sudo yum -y install nasm-2.14.02-0.fc27.x86_64.rpm
+				rm -f nasm-2.14.02-0.fc27.x86_64.rpm
+ 			fi
+			
+			installErplag
+			success
+		fi
+
+		######################## pacman (Arch) ################################
+		which pacman &> /dev/null
+		if [ $? -eq 0 ]
+		then
+			sudo pacman -S $missing --noconfirm
+
+			installErplag
+			success
+		fi
+		
+		printf "${BOLD}${RED}\nInstaller could not identify the package manager in your linux distribution. Please install ${CYAN}gcc, make, ${RED}and ${CYAN}nasm ${RED}and then run the installation script${RESET}\n"	
+		exit 1
+	elif [[ "$OSTYPE" == "darwin"* ]]
+	then
+		var=$(sudo which brew) 
+		if test "$var" == ""
+		then
+			printf "${BOLD}${RED}Please install Homebrew or ensure that ${CYAN}gcc, make, ${RED}and ${CYAN}nasm ${RED}are installed before running the installaton script${RESET}\n" ;
+			exit 1
+		fi
+
+		spin &
+		SPIN_PID=$!
+		brew update
+		kill -9 $SPIN_PID
+		wait $SPIN_PID 2>/dev/null
+
+		spin &
+		SPIN_PID=$!
+		brew install gcc
+		kill -9 $SPIN_PID
+		wait $SPIN_PID 2>/dev/null
+
+		spin &
+		SPIN_PID=$!
+		brew install make
+		kill -9 $SPIN_PID
+		wait $SPIN_PID 2>/dev/null
+
+		spin &
+		SPIN_PID=$!
+		brew install nasm
+		kill -9 $SPIN_PID
+		wait $SPIN_PID 2>/dev/null
+	else
+		printf "${BOLD}${RED}Linux distribution could not be identified! Please install ${CYAN}gcc, make, ${RED}and ${CYAN}nasm ${RED}and then run the installation script${RESET}\n"		
+		exit 1
+	fi
+fi
