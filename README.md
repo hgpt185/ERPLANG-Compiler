@@ -7,10 +7,6 @@ Although it's a toy language, there are features in ERPLAG which, in some sense,
    - Abstraction of dynamic array declaration
    - Function returning multiple values
 
-Here's a screenshot of the compiler running an ERPLAG code to compute the binary representation of a decimal number (`./intBinary`) and the Sieve of Eratosthenes (`./sieve`). These
-
-![alt text](Docs/scrnsht.png)
-
 ## Pre-requisites
 
 The dependencies on using the ERPLAG compiler are -
